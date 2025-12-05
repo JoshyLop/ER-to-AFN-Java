@@ -23,6 +23,7 @@ public class Transicion {
 
     @Override
     public String toString() {
-        return desde + " --[" + simbolo + "]--> " + hasta;
+        String simboloMostrado = simbolo.equals("ε") ? "e" : simbolo;
+        return desde + " --[" + simboloMostrado + "]--> " + hasta;
     }
 }

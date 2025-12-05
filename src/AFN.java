@@ -7,15 +7,15 @@ public class AFN {
     private Set<Estado> estados;
     private Set<Transicion> transiciones;
 
-    public AFN(Estado inicial, Estado final) {
+    public AFN(Estado inicial, Estado estadoFinal) {
         this.estadoInicial = inicial;
-        this.estadoFinal = final;
+        this.estadoFinal = estadoFinal;
         this.estados = new HashSet<>();
         this.transiciones = new HashSet<>();
         
         estados.add(inicial);
-        estados.add(final);
-        final.setAceptacion(true);
+        estados.add(estadoFinal);
+        estadoFinal.setAceptacion(true);
     }
 
     public Estado getEstadoInicial() {
@@ -46,16 +46,22 @@ public class AFN {
 
     public void mostrar() {
         System.out.println("\n=== AFN ===");
-        System.out.println("Estados: " + estados.size());
+        System.out.println("Estado inicial: " + estadoInicial);
+        System.out.println("Estado final: " + estadoFinal);
+        System.out.println("\nEstados totales: " + estados.size());
         for (Estado e : estados) {
-            System.out.println("  " + e);
+            if (e.equals(estadoInicial)) {
+                System.out.println("  → " + e + " (INICIAL)");
+            } else if (e.esAceptacion()) {
+                System.out.println("  ← " + e + " (ACEPTACIÓN)");
+            } else {
+                System.out.println("    " + e);
+            }
         }
-        System.out.println("\nTransiciones: " + transiciones.size());
+        System.out.println("\nTransiciones totales: " + transiciones.size());
         for (Transicion t : transiciones) {
             System.out.println("  " + t);
         }
-        System.out.println("Estado inicial: " + estadoInicial);
-        System.out.println("Estado final: " + estadoFinal);
         System.out.println("================\n");
     }
 }

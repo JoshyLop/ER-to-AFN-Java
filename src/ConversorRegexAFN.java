@@ -1,25 +1,39 @@
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
 public class ConversorRegexAFN {
     private int contadorEstados;
     private String regex;
+    private Set<Estado> todosLosEstados;
+    private Set<Transicion> todasLasTransiciones;
 
     public ConversorRegexAFN(String regex) {
         this.regex = regex;
         this.contadorEstados = 0;
+        this.todosLosEstados = new HashSet<>();
+        this.todasLasTransiciones = new HashSet<>();
     }
 
     private Estado crearEstado() {
-        return new Estado(contadorEstados++);
+        Estado e = new Estado(contadorEstados++);
+        todosLosEstados.add(e);
+        return e;
     }
 
     private AFN crearAFNSimbolo(String simbolo) {
         Estado inicial = crearEstado();
-        Estado final = crearEstado();
-        AFN afn = new AFN(inicial, final);
+        Estado estadoFinal = crearEstado();
         
-        afn.agregarTransicion(new Transicion(inicial, final, simbolo));
-        System.out.println("  ✓ Símbolo '" + simbolo + "': " + inicial + " -> " + final);
+        Transicion t = new Transicion(inicial, estadoFinal, simbolo);
+        todasLasTransiciones.add(t);
+        
+        AFN afn = new AFN(inicial, estadoFinal);
+        afn.agregarTransicion(t);
+        
+        System.out.println("\n  ✓ Paso 1: Crear símbolo '" + simbolo + "'");
+        System.out.println("    Estados creados: " + inicial + " -> " + estadoFinal);
+        System.out.println("    Transición: " + t);
         
         return afn;
     }
@@ -27,52 +41,93 @@ public class ConversorRegexAFN {
     private AFN unir(AFN afn1, AFN afn2) {
         // Concatenación: conectar final de afn1 con inicial de afn2
         Estado inicial = afn1.getEstadoInicial();
-        Estado final = afn2.getEstadoFinal();
+        Estado estadoFinal = afn2.getEstadoFinal();
         
+        // Desmarcar aceptación del final de afn1
         afn1.getEstadoFinal().setAceptacion(false);
+        afn2.getEstadoFinal().setAceptacion(false);
         
-        for (Transicion t : afn2.getTransiciones()) {
-            afn1.agregarTransicion(t);
+        // Crear transición epsilon entre final de afn1 e inicial de afn2
+        Transicion epsilon = new Transicion(afn1.getEstadoFinal(), afn2.getEstadoInicial(), "ε");
+        todasLasTransiciones.add(epsilon);
+        
+        // Crear nuevo AFN que contenga todos los estados y transiciones
+        AFN resultado = new AFN(inicial, estadoFinal);
+        
+        // Agregar todos los estados de afn1
+        for (Estado e : afn1.getEstados()) {
+            resultado.agregarEstado(e);
         }
         
-        afn1.agregarTransicion(new Transicion(
-            afn1.getEstadoFinal(), 
-            afn2.getEstadoInicial(), 
-            "ε"
-        ));
+        // Agregar todos los estados de afn2
+        for (Estado e : afn2.getEstados()) {
+            resultado.agregarEstado(e);
+        }
         
-        afn1.agregarEstado(afn2.getEstadoFinal());
+        // Agregar todas las transiciones de afn1
+        for (Transicion tr : afn1.getTransiciones()) {
+            resultado.agregarTransicion(tr);
+        }
         
-        System.out.println("  ✓ Concatenación: q" + inicial.getId() + " ... q" + final.getId());
+        // Agregar todas las transiciones de afn2
+        for (Transicion tr : afn2.getTransiciones()) {
+            resultado.agregarTransicion(tr);
+        }
         
-        return new AFN(inicial, final);
+        // Agregar la transición epsilon
+        resultado.agregarTransicion(epsilon);
+        
+        System.out.println("  ✓ Concatenación completada");
+        System.out.println("    Estado inicial: " + inicial + " -> Estado final: " + estadoFinal);
+        System.out.println("    Total estados en AFN: " + resultado.getEstados().size());
+        System.out.println("    Total transiciones: " + resultado.getTransiciones().size());
+        
+        return resultado;
     }
 
     private AFN alternancia(AFN afn1, AFN afn2) {
-        // Crear nuevos estados inicial y final
         Estado novoInicial = crearEstado();
         Estado novoFinal = crearEstado();
         
         AFN resultado = new AFN(novoInicial, novoFinal);
         
-        // Conectar inicial con ambos AFN
-        resultado.agregarTransicion(new Transicion(novoInicial, afn1.getEstadoInicial(), "ε"));
-        resultado.agregarTransicion(new Transicion(novoInicial, afn2.getEstadoInicial(), "ε"));
-        
-        // Conectar finales de ambos con el nuevo final
+        // Desmarcar aceptación
         afn1.getEstadoFinal().setAceptacion(false);
         afn2.getEstadoFinal().setAceptacion(false);
         
-        resultado.agregarTransicion(new Transicion(afn1.getEstadoFinal(), novoFinal, "ε"));
-        resultado.agregarTransicion(new Transicion(afn2.getEstadoFinal(), novoFinal, "ε"));
+        // Transiciones epsilon del nuevo inicial a los iniciales de ambos AFN
+        Transicion e1 = new Transicion(novoInicial, afn1.getEstadoInicial(), "ε");
+        Transicion e2 = new Transicion(novoInicial, afn2.getEstadoInicial(), "ε");
+        todasLasTransiciones.add(e1);
+        todasLasTransiciones.add(e2);
         
-        // Agregar todos los estados y transiciones
+        resultado.agregarTransicion(e1);
+        resultado.agregarTransicion(e2);
+        
+        // Transiciones epsilon de los finales al nuevo final
+        Transicion e3 = new Transicion(afn1.getEstadoFinal(), novoFinal, "ε");
+        Transicion e4 = new Transicion(afn2.getEstadoFinal(), novoFinal, "ε");
+        todasLasTransiciones.add(e3);
+        todasLasTransiciones.add(e4);
+        
+        resultado.agregarTransicion(e3);
+        resultado.agregarTransicion(e4);
+        
+        // Agregar todos los estados
+        resultado.agregarEstado(novoInicial);
+        resultado.agregarEstado(novoFinal);
+        
         for (Estado e : afn1.getEstados()) resultado.agregarEstado(e);
         for (Estado e : afn2.getEstados()) resultado.agregarEstado(e);
+        
+        // Agregar todas las transiciones
         for (Transicion t : afn1.getTransiciones()) resultado.agregarTransicion(t);
         for (Transicion t : afn2.getTransiciones()) resultado.agregarTransicion(t);
         
-        System.out.println("  ✓ Alternancia (|): q" + novoInicial.getId() + " ... q" + novoFinal.getId());
+        System.out.println("  ✓ Alternancia completada");
+        System.out.println("    Estado inicial: " + novoInicial + " -> Estado final: " + novoFinal);
+        System.out.println("    Total estados: " + resultado.getEstados().size());
+        System.out.println("    Total transiciones: " + resultado.getTransiciones().size());
         
         return resultado;
     }
@@ -84,54 +139,86 @@ public class ConversorRegexAFN {
         
         AFN resultado = new AFN(novoInicial, novoFinal);
         
-        // Conectar inicial con el AFN
-        resultado.agregarTransicion(new Transicion(novoInicial, afn.getEstadoInicial(), "ε"));
-        
-        // Conectar final del AFN con el nuevo final
         afn.getEstadoFinal().setAceptacion(false);
-        resultado.agregarTransicion(new Transicion(afn.getEstadoFinal(), novoFinal, "ε"));
+        
+        // Transición epsilon: inicial nuevo -> inicial AFN
+        Transicion e1 = new Transicion(novoInicial, afn.getEstadoInicial(), "ε");
+        todasLasTransiciones.add(e1);
+        resultado.agregarTransicion(e1);
+        
+        // Transición epsilon: final AFN -> final nuevo
+        Transicion e2 = new Transicion(afn.getEstadoFinal(), novoFinal, "ε");
+        todasLasTransiciones.add(e2);
+        resultado.agregarTransicion(e2);
         
         // Ciclo: final vuelve al inicial (Kleene)
-        resultado.agregarTransicion(new Transicion(afn.getEstadoFinal(), afn.getEstadoInicial(), "ε"));
+        Transicion e3 = new Transicion(afn.getEstadoFinal(), afn.getEstadoInicial(), "ε");
+        todasLasTransiciones.add(e3);
+        resultado.agregarTransicion(e3);
         
-        // Bypass: inicial va directo al final
-        resultado.agregarTransicion(new Transicion(novoInicial, novoFinal, "ε"));
+        // Bypass: inicial nuevo va directo al final nuevo
+        Transicion e4 = new Transicion(novoInicial, novoFinal, "ε");
+        todasLasTransiciones.add(e4);
+        resultado.agregarTransicion(e4);
         
-        // Agregar todos los estados y transiciones del AFN original
+        // Agregar estados
+        resultado.agregarEstado(novoInicial);
+        resultado.agregarEstado(novoFinal);
         for (Estado e : afn.getEstados()) resultado.agregarEstado(e);
+        
+        // Agregar transiciones del AFN original
         for (Transicion t : afn.getTransiciones()) resultado.agregarTransicion(t);
         
-        System.out.println("  ✓ Kleene (*): q" + novoInicial.getId() + " ... q" + novoFinal.getId());
+        System.out.println("  ✓ Kleene (*) completado");
+        System.out.println("    Estado inicial: " + novoInicial + " -> Estado final: " + novoFinal);
+        System.out.println("    Total estados: " + resultado.getEstados().size());
+        System.out.println("    Total transiciones: " + resultado.getTransiciones().size());
         
         return resultado;
     }
 
     private AFN masUno(AFN afn) {
         // a+ = a.a*
-        System.out.println("  ✓ Más uno (+): creando a+");
+        System.out.println("  ✓ Aplicando operador (+)");
+        System.out.println("    Construcción: a+ = a.a*");
         AFN kleeneAFN = kleene(afn);
         return unir(afn, kleeneAFN);
     }
 
     private AFN opcional(AFN afn) {
-        // a? = ε | a
         Estado novoInicial = crearEstado();
         Estado novoFinal = crearEstado();
         
         AFN resultado = new AFN(novoInicial, novoFinal);
         
+        afn.getEstadoFinal().setAceptacion(false);
+        
         // Camino 1: directo (epsilon)
-        resultado.agregarTransicion(new Transicion(novoInicial, novoFinal, "ε"));
+        Transicion e1 = new Transicion(novoInicial, novoFinal, "ε");
+        todasLasTransiciones.add(e1);
+        resultado.agregarTransicion(e1);
         
         // Camino 2: a través del AFN
-        resultado.agregarTransicion(new Transicion(novoInicial, afn.getEstadoInicial(), "ε"));
-        afn.getEstadoFinal().setAceptacion(false);
-        resultado.agregarTransicion(new Transicion(afn.getEstadoFinal(), novoFinal, "ε"));
+        Transicion e2 = new Transicion(novoInicial, afn.getEstadoInicial(), "ε");
+        todasLasTransiciones.add(e2);
+        resultado.agregarTransicion(e2);
         
+        Transicion e3 = new Transicion(afn.getEstadoFinal(), novoFinal, "ε");
+        todasLasTransiciones.add(e3);
+        resultado.agregarTransicion(e3);
+        
+        // Agregar estados
+        resultado.agregarEstado(novoInicial);
+        resultado.agregarEstado(novoFinal);
         for (Estado e : afn.getEstados()) resultado.agregarEstado(e);
+        
+        // Agregar transiciones del AFN
         for (Transicion t : afn.getTransiciones()) resultado.agregarTransicion(t);
         
-        System.out.println("  ✓ Opcional (?): q" + novoInicial.getId() + " ... q" + novoFinal.getId());
+        System.out.println("  ✓ Opcional (?) completado");
+        System.out.println("    Estado inicial: " + novoInicial + " -> Estado final: " + novoFinal);
+        System.out.println("    Total estados: " + resultado.getEstados().size());
+        System.out.println("    Total transiciones: " + resultado.getTransiciones().size());
         
         return resultado;
     }
