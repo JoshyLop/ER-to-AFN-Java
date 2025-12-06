@@ -4,12 +4,12 @@ import java.util.Stack;
 
 public class ConversorRegexAFN {
     private int contadorEstados;
-    private String regex;
+    private String expresionRegular;
     private Set<Estado> todosLosEstados;
     private Set<Transicion> todasLasTransiciones;
 
-    public ConversorRegexAFN(String regex) {
-        this.regex = regex;
+    public ConversorRegexAFN(String expresionRegular) {
+        this.expresionRegular = expresionRegular;
         this.contadorEstados = 0;
         this.todosLosEstados = new HashSet<>();
         this.todasLasTransiciones = new HashSet<>();
@@ -77,7 +77,6 @@ public class ConversorRegexAFN {
         // Agregar la transición epsilon
         resultado.agregarTransicion(epsilon);
         
-        System.out.println("  ✓ Concatenación completada");
         System.out.println("    Estado inicial: " + inicial + " -> Estado final: " + estadoFinal);
         System.out.println("    Total estados en AFN: " + resultado.getEstados().size());
         System.out.println("    Total transiciones: " + resultado.getTransiciones().size());
@@ -224,8 +223,8 @@ public class ConversorRegexAFN {
     }
 
     public AFN convertir() {
-        System.out.println("\n>>> Iniciando conversión de: " + regex);
-        String regexProcesada = agregarConcatenacionExplicita(regex);
+        System.out.println("\n>>> Iniciando conversión de: " + expresionRegular);
+        String regexProcesada = agregarConcatenacionExplicita(expresionRegular);
         System.out.println(">>> Expresión procesada: " + regexProcesada);
         
         Stack<AFN> pila = new Stack<>();

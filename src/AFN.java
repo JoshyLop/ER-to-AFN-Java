@@ -47,13 +47,11 @@ public class AFN {
     public void mostrar() {
         System.out.println("\n=== AFN ===");
         System.out.println("Estado inicial: " + estadoInicial);
-        System.out.println("Estado final: " + estadoFinal);
+        System.out.println("Estado final: " + estadoFinal + " (ACEPTACIÓN)");
         System.out.println("\nEstados totales: " + estados.size());
         for (Estado e : estados) {
             if (e.equals(estadoInicial)) {
-                System.out.println("  → " + e + " (INICIAL)");
-            } else if (e.esAceptacion()) {
-                System.out.println("  ← " + e + " (ACEPTACIÓN)");
+                System.out.println("  → " + e);
             } else {
                 System.out.println("    " + e);
             }

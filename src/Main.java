@@ -2,13 +2,21 @@ import java.util.Scanner;
 
 public class Main {
     
+    static String crearLinea(int cantidad) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < cantidad; i++) {
+            sb.append("=");
+        }
+        return sb.toString();
+    }
+    
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         
         System.out.println("===================================================");
         System.out.println("  Convertidor de ER a AFN (Método de Thompson) ");
         System.out.println("===================================================");
-        System.out.println("\nOperadores soportados:");
+        System.out.println("\nOperadores:");
         System.out.println("  | (alternancia)");
         System.out.println("  * (Kleene - cero o más)");
         System.out.println("  + (una o más)");
