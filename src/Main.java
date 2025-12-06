@@ -40,7 +40,7 @@ public class Main {
             System.out.println("EXPRESIÓN REGULAR: " + expresionR);
 
             try {
-                ConversorRegexAFN conversor = new ConversorRegexAFN(expresionR);
+                ConversorERtoAFN conversor = new ConversorERtoAFN(expresionR);
                 AFN afn = conversor.convertir();
                 afn.mostrar();
             } catch (Exception e) {

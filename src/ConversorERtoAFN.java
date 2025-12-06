@@ -2,13 +2,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-public class ConversorRegexAFN {
+public class ConversorERtoAFN {
     private int contadorEstados;
     private String expresionRegular;
     private Set<Estado> todosLosEstados;
     private Set<Transicion> todasLasTransiciones;
 
-    public ConversorRegexAFN(String expresionRegular) {
+    public ConversorERtoAFN(String expresionRegular) {
         this.expresionRegular = expresionRegular;
         this.contadorEstados = 0;
         this.todosLosEstados = new HashSet<>();
@@ -272,6 +272,14 @@ public class ConversorRegexAFN {
         }
 
         AFN resultado = pila.pop();
+        
+        // Limpiar todos los estados de aceptación excepto el final
+        for (Estado e : resultado.getEstados()) {
+            if (!e.equals(resultado.getEstadoFinal())) {
+                e.setAceptacion(false);
+            }
+        }
+        
         System.out.println(">>> Conversión completada\n");
         return resultado;
     }
